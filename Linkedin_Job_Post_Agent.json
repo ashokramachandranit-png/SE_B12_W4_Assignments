@@ -1,0 +1,440 @@
+{
+  "name": "My workflow 2",
+  "nodes": [
+    {
+      "parameters": {
+        "authentication": "n8nUserAuth",
+        "formTitle": "LinkedIn Post Generator",
+        "formDescription": "Enter a topic to generate a LinkedIn post",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Topic"
+            }
+          ]
+        },
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.6,
+      "position": [
+        -864,
+        -208
+      ],
+      "id": "ec0e979e-3dbc-4023-839e-11b16d4bc549",
+      "name": "On form submission",
+      "webhookId": "0315a90b-3511-432b-8456-3321d87b6a09"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4.1-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4.1-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        -608,
+        -16
+      ],
+      "id": "5e8c22f5-54b2-4781-97e1-b452dbb139a4",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "OLIqCle1woDSqans",
+          "name": "OpenAI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Write a professional LinkedIn post about the following topic:\n\nTopic: {{ $json.Topic }}\n\nRequirements:\n1. Start with an engaging opening hook.\n2. Explain the topic in clear, professional language.\n3. Include three useful insights, practical tips, or takeaways.\n4. Make the post relevant to IT professionals and technology leaders when appropriate.\n5. End with a meaningful question that encourages engagement.\n6. Use a natural, human tone.\n7. Use 3–5 relevant hashtags.\n8. Aim for 150–250 words.\n9. Do not invent statistics, personal experiences, quotations, or factual claims.\n10. Return only the draft post, without explaining your writing process.",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        -560,
+        -208
+      ],
+      "id": "7ba0e2ac-85c0-45c6-8a93-4fb3f10b7eb8",
+      "name": "Writer Agent"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a senior LinkedIn content reviewer and editor.\n\nReview and improve the LinkedIn post provided by the Writer Agent.\n\nDRAFT TO REVIEW:\n{{ $json.output }}\n\nFollow these review standards:\n\n1. Opening hook: Make the first sentence engaging.\n2. Professional tone: Keep the writing clear, credible, and suitable for LinkedIn.\n3. Content quality: Ensure the post provides useful insights and practical value.\n4. Grammar: Correct spelling, grammar, and punctuation.\n5. Readability: Use short paragraphs and remove unnecessary repetition.\n6. Accuracy: Remove unsupported statistics, fabricated facts, and exaggerated claims.\n7. Engagement: Finish with a meaningful question or call to action.\n8. Hashtags: Include 3–5 relevant hashtags.\n9. Length: Aim for 150–250 words where practical.\n\nRewrite the draft wherever necessary.\n\nReturn only the complete, improved LinkedIn post. Do not return review comments, scores, or explanations.",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        -176,
+        -208
+      ],
+      "id": "ce06d637-3000-446b-87f1-201c29c9edd8",
+      "name": "Reviewer Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4.1-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4.1-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        -192,
+        0
+      ],
+      "id": "7b232294-59f1-4697-b7df-41f8b7ccb059",
+      "name": "OpenAI Chat Model1",
+      "credentials": {
+        "openAiApi": {
+          "id": "OLIqCle1woDSqans",
+          "name": "OpenAI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "sendAndWait",
+        "sendTo": "ashokramachandran.it@gmail.com",
+        "subject": "LinkedIn Post — Approval Required",
+        "message": "=Hello,\n\nYour LinkedIn post has been generated and reviewed by the AI agents.\n\n**Topic:**\n{{ $('On form submission').first().json.Topic }}\n\n**Final Reviewed LinkedIn Post:**\n\n{{ $('Reviewer Agent').first().json.output }}\n\nPlease review the post above and select one of the following options:\n\n- **Approve:** Save the approved post to Google Sheets.\n- **Reject:** End the workflow without saving the post.\n\nThank you.",
+        "approvalOptions": {
+          "values": {
+            "approvalType": "double"
+          }
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        192,
+        -208
+      ],
+      "id": "e284d926-98b1-429d-aaca-e7aa25c736b2",
+      "name": "Send message and wait for response",
+      "webhookId": "b078f7e0-2241-4106-a2f2-b76550e281f2",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "yrNoJgd0rw22Q196",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "81e7421e-e8a5-4be3-b1da-90d2f510d7fb",
+              "leftValue": "={{ $json.data.approved }}",
+              "rightValue": false,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        416,
+        -208
+      ],
+      "id": "c13874f9-db59-44ff-80dc-956bb9c11b66",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "https://docs.google.com/spreadsheets/d/1gH8K_7D835vHRnPSrGrLANBZYnmhxEvxwszfHqM-2hA/edit?gid=0#gid=0",
+          "mode": "url"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1gH8K_7D835vHRnPSrGrLANBZYnmhxEvxwszfHqM-2hA/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Date": "={{ $now.toISODate() }}",
+            "Topic": "={{ $('On form submission').item.json.Topic }}",
+            "Final Post": "={{ $('Reviewer Agent').item.json.output }}",
+            "Status": "=Approved"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Date",
+              "displayName": "Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Topic",
+              "displayName": "Topic",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Final Post",
+              "displayName": "Final Post",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        624,
+        -320
+      ],
+      "id": "c7a0fee0-bf7e-4333-9033-faf45bdbea2c",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "BYaRnugfUvjrnzF5",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "https://docs.google.com/spreadsheets/d/1gH8K_7D835vHRnPSrGrLANBZYnmhxEvxwszfHqM-2hA/edit?gid=0#gid=0",
+          "mode": "url"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1gH8K_7D835vHRnPSrGrLANBZYnmhxEvxwszfHqM-2hA/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Date": "={{ $('On form submission').item.json.submittedAt }}",
+            "Topic": "={{ $('On form submission').item.json.Topic }}",
+            "Final Post": "={{ $('Reviewer Agent').item.json.output }}",
+            "Status": "=Declined"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Date",
+              "displayName": "Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Topic",
+              "displayName": "Topic",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Final Post",
+              "displayName": "Final Post",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        624,
+        -144
+      ],
+      "id": "fb325c24-254e-4c52-9018-616f366d92ac",
+      "name": "Append row in sheet1",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "BYaRnugfUvjrnzF5",
+          "name": "Google Sheets account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "On form submission": {
+      "main": [
+        [
+          {
+            "node": "Writer Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Writer Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Writer Agent": {
+      "main": [
+        [
+          {
+            "node": "Reviewer Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Reviewer Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Reviewer Agent": {
+      "main": [
+        [
+          {
+            "node": "Send message and wait for response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send message and wait for response": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Append row in sheet1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "df88a73e-ecd8-4789-8072-cb093fdc4251",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "f665116a20532129a4680d075979b1ffe699580c71487dce43c3224107d7ff2f"
+  },
+  "nodeGroups": [],
+  "id": "M09I6YDZUTCTaAZ8",
+  "tags": []
+}
