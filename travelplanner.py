@@ -1,138 +1,100 @@
 
 import os
 from pathlib import Path
+
 from dotenv import load_dotenv
-from crewai import Agent, Task, Crew, Process
+from crewai import Agent, Task, Crew, Process, LLM
 
 
-# Load API key from .env in the same folder as this script
+# Load environment variables from the same folder as this script
 env_path = Path(__file__).resolve().parent / ".env"
 load_dotenv(dotenv_path=env_path)
 
 
-# Country and familiar city options
 COUNTRY_CITIES = {
     "India": [
-        "Chennai",
-        "Bengaluru",
-        "Mumbai",
-        "New Delhi",
-        "Hyderabad",
-        "Kochi",
-        "Jaipur",
-        "Kolkata",
-        "Goa",
-        "Agra",
+        "Chennai", "Bengaluru", "Mumbai", "New Delhi",
+        "Hyderabad", "Kochi", "Jaipur", "Kolkata", "Goa", "Agra"
     ],
     "United States": [
-        "New York City",
-        "Los Angeles",
-        "San Francisco",
-        "Chicago",
-        "Las Vegas",
-        "Miami",
-        "Seattle",
-        "Boston",
+        "New York City", "Los Angeles", "San Francisco",
+        "Chicago", "Las Vegas", "Miami", "Seattle", "Boston"
     ],
     "United Kingdom": [
-        "London",
-        "Manchester",
-        "Liverpool",
-        "Edinburgh",
-        "Oxford",
-        "Birmingham",
-        "Bath",
+        "London", "Manchester", "Liverpool", "Edinburgh",
+        "Oxford", "Birmingham", "Bath"
     ],
     "France": [
-        "Paris",
-        "Nice",
-        "Lyon",
-        "Marseille",
-        "Bordeaux",
-        "Strasbourg",
+        "Paris", "Nice", "Lyon", "Marseille", "Bordeaux"
     ],
     "Japan": [
-        "Tokyo",
-        "Kyoto",
-        "Osaka",
-        "Hiroshima",
-        "Nara",
-        "Sapporo",
+        "Tokyo", "Kyoto", "Osaka", "Hiroshima", "Nara", "Sapporo"
     ],
     "Italy": [
-        "Rome",
-        "Venice",
-        "Florence",
-        "Milan",
-        "Naples",
-        "Pisa",
+        "Rome", "Venice", "Florence", "Milan", "Naples", "Pisa"
     ],
     "Australia": [
-        "Sydney",
-        "Melbourne",
-        "Brisbane",
-        "Perth",
-        "Adelaide",
-        "Canberra",
+        "Sydney", "Melbourne", "Brisbane", "Perth",
+        "Adelaide", "Canberra"
     ],
-    "Singapore": [
-        "Singapore",
-    ],
+    "Singapore": ["Singapore"]
 }
 
 
 def main():
-    # Step 1: Verify the API key
+    # Step 1: Read OpenAI configuration
     api_key = os.getenv("OPENAI_API_KEY")
+    model_name = os.getenv("OPENAI_MODEL_NAME", "gpt-4o-mini")
 
     if not api_key:
-        print("Error: OPENAI_API_KEY was not found.")
-        print(f"Please check your .env file: {env_path}")
+        print("ERROR: OPENAI_API_KEY was not found in .env")
+        print(f"Check the file at: {env_path}")
         return
 
-    # Step 2: Display country options
+    # Step 2: Configure the OpenAI LLM explicitly
+    llm = LLM(
+        model=f"openai/{model_name}",
+        api_key=api_key,
+        temperature=0.3
+    )
+
+    # Step 3: Ask the user to select a country
     countries = list(COUNTRY_CITIES.keys())
 
     print("\n========== CREWAI TRAVEL PLANNER ==========")
-    print("\nSelect a country to explore:\n")
+    print("\nSelect a country:\n")
 
-    for index, country in enumerate(countries, start=1):
-        print(f"{index}. {country}")
+    for index, country_name in enumerate(countries, start=1):
+        print(f"{index}. {country_name}")
 
     print(f"{len(countries) + 1}. Other country")
 
-    country_choice = input(
-        "\nEnter your choice: "
-    ).strip()
+    choice_text = input("\nEnter your choice: ").strip()
 
-    # Step 3: Get the selected country
-    if not country_choice.isdigit():
-        print("Invalid input. Please enter a number.")
+    if not choice_text.isdigit():
+        print("Invalid input. Enter a number.")
         return
 
-    choice = int(country_choice)
+    choice = int(choice_text)
 
     if 1 <= choice <= len(countries):
         country = countries[choice - 1]
         cities = COUNTRY_CITIES[country]
 
     elif choice == len(countries) + 1:
-        country = input(
-            "Enter the country name: "
-        ).strip()
+        country = input("Enter the country name: ").strip()
 
         if not country:
-            print("Country name cannot be empty.")
+            print("Country cannot be empty.")
             return
 
-        # Allow the user to enter any country
         cities = []
 
     else:
         print("Invalid country selection.")
         return
 
-    # Step 4: Display familiar cities in the country
+    # Step 4: Display familiar cities in the selected country
     if cities:
         print(f"\nPopular cities in {country}:\n")
 
@@ -141,96 +103,91 @@ def main():
 
         print(f"{len(cities) + 1}. Other city")
 
-        city_choice = input(
-            "\nSelect a city: "
-        ).strip()
+        city_choice_text = input("\nSelect a city: ").strip()
 
-        if not city_choice.isdigit():
-            print("Invalid input. Please enter a number.")
+        if not city_choice_text.isdigit():
+            print("Invalid input. Enter a number.")
             return
 
-        city_index = int(city_choice)
+        city_choice = int(city_choice_text)
 
-        if 1 <= city_index <= len(cities):
-            city = cities[city_index - 1]
+        if 1 <= city_choice <= len(cities):
+            city = cities[city_choice - 1]
 
-        elif city_index == len(cities) + 1:
-            city = input(
-                f"Enter a city in {country}: "
-            ).strip()
+        elif city_choice == len(cities) + 1:
+            city = input(f"Enter a city in {country}: ").strip()
 
         else:
             print("Invalid city selection.")
             return
-
     else:
-        city = input(
-            f"Enter a city in {country}: "
-        ).strip()
+        city = input(f"Enter a city in {country}: ").strip()
 
     if not city:
-        print("City name cannot be empty.")
+        print("City cannot be empty.")
         return
 
-    # Step 5: Create the Travel Planner Agent
-    travel_planner = Agent(
-        role="Travel Planner and Local Destination Expert",
-        goal=(
-            f"Recommend exactly three interesting places to visit "
-            f"in {city}, {country}. Help travelers discover "
-            "memorable attractions, local culture, and landmarks."
-        ),
-        backstory=(
-            "You are an experienced travel planner who specializes "
-            "in destinations around the world. You recommend "
-            "interesting attractions, explain why each place is "
-            "worth visiting, and provide practical travel advice. "
-            "You aim to give clear, useful, and location-relevant "
-            "recommendations to every traveler."
-        ),
-        verbose=True
-    )
-
-    # Step 6: Create one Task
-    travel_task = Task(
-        description=(
-            f"Prepare a travel plan for {city}, {country}. "
-            "Recommend exactly three distinct places to visit. "
-            "For each place, provide its name, a short description, "
-            "its location, and one reason to visit. "
-            "Keep every recommendation relevant to the selected city. "
-            "Do not invent attractions or claim that current opening "
-            "hours have been verified."
-        ),
-        expected_output=(
-            "A numbered list containing exactly 3 places to visit. "
-            "For each place include: name, location, description, "
-            "and reason to visit. End with one practical travel tip "
-            "for the selected city."
-        ),
-        agent=travel_planner
-    )
-
-    # Step 7: Create the Crew
-    travel_crew = Crew(
-        agents=[travel_planner],
-        tasks=[travel_task],
-        process=Process.sequential,
-        verbose=True
-    )
-
-    # Step 8: Execute the Crew
-    print(f"\nPlanning your trip to {city}, {country}...\n")
-
     try:
+        # Step 5: Create the Travel Planner Agent with OpenAI LLM
+        travel_planner = Agent(
+            role="Travel Planner and Local Destination Expert",
+            goal=(
+                f"Recommend exactly three interesting places to visit "
+                f"in {city}, {country}, based on attractions, "
+                "local culture, and visitor experience."
+            ),
+            backstory=(
+                "You are an experienced travel planner who helps "
+                "travelers discover memorable destinations. You explain "
+                "why attractions are worth visiting and provide useful "
+                "travel recommendations. You distinguish known facts "
+                "from information that has not been verified."
+            ),
+            llm=llm,
+            verbose=True
+        )
+
+        # Step 6: Create one Task
+        travel_task = Task(
+            description=(
+                f"Recommend exactly three distinct places to visit "
+                f"in {city}, {country}. For each place, provide its "
+                "name, location, a short description, and one reason "
+                "to visit. Keep every recommendation relevant to "
+                "the selected city. Do not claim to have checked "
+                "live opening hours or current conditions."
+            ),
+            expected_output=(
+                "A numbered list containing exactly three places. "
+                "For each place include its name, location, description, "
+                "and reason to visit. End with one practical travel tip."
+            ),
+            agent=travel_planner
+        )
+
+        # Step 7: Assemble the Crew
+        travel_crew = Crew(
+            agents=[travel_planner],
+            tasks=[travel_task],
+            process=Process.sequential,
+            verbose=True
+        )
+
+        # Step 8: Run the OpenAI-powered Crew
+        print(f"\nDestination: {city}, {country}")
+        print(f"LLM provider: OpenAI")
+        print(f"Model: {model_name}")
+        print("\nGenerating your travel recommendations...\n")
+
         result = travel_crew.kickoff()
 
+        # Step 9: Display the result
         print("\n========== YOUR TRAVEL PLAN ==========\n")
         print(result)
 
     except Exception as error:
         print("\nUnable to generate the travel plan.")
-        print(f"Error details: {error}")
+        print(f"Error: {error}")
 
 
 if __name__ == "__main__":
