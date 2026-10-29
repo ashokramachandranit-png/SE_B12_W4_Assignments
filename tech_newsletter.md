@@ -1,0 +1,8 @@
+### News 1: Microsoft Cloud Growth and Earnings in 2024  
+Microsoft reported strong performance in its cloud business for fiscal year 2024, with the intelligent cloud segment generating $17.8 billion in revenue. Overall revenue increased by $17.5 billion or 20%. Quarterly cloud revenue hit $36.8 billion, showing 21% year-over-year growth. Azure revenue surged 30%, driven partly by AI advancements. These results reflect Microsoft’s expanding leadership in cloud services amid growing AI technology adoption.  
+
+### News 2: Upwind Raises $400 Million in Funding  
+Cloud security startup Upwind secured $400 million in a funding round led by Bessemer Venture Partners, boosting its valuation to approximately $3.8 billion. This follows a December 2024 Series A round that valued the company near $900 million. The fresh capital will fuel Upwind’s global expansion, innovation, and workforce growth in 2025. Upwind is strengthening its position in AI-driven cybersecurity solutions with this significant investment.  
+
+### News 3: Apple Launches New Touchscreen MacBook Pro  
+Apple unveiled the new 14-inch MacBook Pro, its first laptop with a touchscreen, featuring a PROLED XDR OLED display. Pricing starts at $2899, with pre-orders beginning October 28 and availability on November 6. Powered by the M6 chip, this model combines Apple’s renowned hardware performance with enhanced touchscreen interactivity tailored for professionals and creatives.
